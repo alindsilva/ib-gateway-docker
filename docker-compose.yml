@@ -9,14 +9,14 @@ services:
     image: ghcr.io/gnzsnz/ib-gateway:latest
     environment:
       TWS_USERID: ${TWS_USERID}
-      TWS_PASSWORD: ${TWS_PASSWORD}
+      TWS_PASSWORD_FILE: ${TWS_PASSWORD_FILE}
+      VNC_SERVER_PASSWORD_FILE: ${VNC_SERVER_PASSWORD_FILE}
       TRADING_MODE: ${TRADING_MODE:-paper}
       TWS_USERID_PAPER: ${TWS_USERID_PAPER:-}
       TWS_PASSWORD_PAPER: ${TWS_PASSWORD_PAPER:-}
       TWS_SETTINGS_PATH: ${TWS_SETTINGS_PATH:-}
       TWS_ACCEPT_INCOMING: ${TWS_ACCEPT_INCOMING:-manual}
       READ_ONLY_API: ${READ_ONLY_API:-}
-      VNC_SERVER_PASSWORD: ${VNC_SERVER_PASSWORD:-}
       TWOFA_TIMEOUT_ACTION: ${TWOFA_TIMEOUT_ACTION:-exit}
       BYPASS_WARNING: ${BYPASS_WARNING:-}
       AUTO_RESTART_TIME: ${AUTO_RESTART_TIME:-}
@@ -41,12 +41,21 @@ services:
       SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
-    #    volumes:
-    #      - ${PWD}/jts.ini:/home/ibgateway/Jts/jts.ini
-    #      - ${PWD}/config.ini:/home/ibgateway/ibc/config.ini
-    #      - ${PWD}/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
-    #      - ${PWD}/ssh/:/home/ibgateway/.ssh
+    volumes:
+      - ib_gateway_settings:/home/ibgateway/tws_settings
     ports:
       - "127.0.0.1:4001:4003"
       - "127.0.0.1:4002:4004"
       - "127.0.0.1:5900:5900"
+    secrets:
+      - tws_password
+      - vnc_password
+
+volumes:
+  ib_gateway_settings:
+
+secrets:
+  tws_password:
+    file: ./tws_password.txt
+  vnc_password:
+    file: ./vnc_server_password.txt
