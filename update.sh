@@ -18,6 +18,7 @@ fi
 
 echo ".> Setting channle: $channel and version: $version for ibgateway"
 cp -r image-files/. "$channel/."
+cp -r image-files/scripts "$channel/scripts"
 
 # Dockerfile
 rm -f "$channel/Dockerfile"

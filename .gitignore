@@ -1,3 +1,12 @@
+# Environment-specific configuration
+.env
+
+
+# Local secret files
+*.txt
+
+# SSH keys
+*.pem
 /.env
 tws_settings/
 ssh/
@@ -5,3 +14,4 @@ ssh/
 .python-version
 /*_password.txt
 /pass/*
+/deploy.conf

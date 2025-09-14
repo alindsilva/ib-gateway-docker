@@ -3,10 +3,11 @@ services:
   ib-gateway:
     restart: always
     build:
-      context: ./latest
+      context: .
+      dockerfile: latest/Dockerfile
       tags:
-        - "ghcr.io/gnzsnz/ib-gateway:latest"
-    image: ghcr.io/gnzsnz/ib-gateway:latest
+        - "${ECR_REPOSITORY_URL}:latest"
+    image: ${ECR_REPOSITORY_URL}:latest
     environment:
       TWS_USERID: ${TWS_USERID}
       TWS_PASSWORD_FILE: ${TWS_PASSWORD_FILE}

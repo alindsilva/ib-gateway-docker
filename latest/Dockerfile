@@ -54,11 +54,11 @@ RUN apt-get update -y && \
   chmod -R u+x /root/ibc/*.sh && \
   chmod -R u+x /root/ibc/scripts/*.sh
 
-COPY ./config/ibgateway/jts.ini.tmpl /root/Jts/jts.ini.tmpl
-COPY ./config/ibc/config.ini.tmpl /root/ibc/config.ini.tmpl
+COPY ./image-files/config/ibgateway/jts.ini.tmpl /root/Jts/jts.ini.tmpl
+COPY ./image-files/config/ibc/config.ini.tmpl /root/ibc/config.ini.tmpl
 
 # Copy scripts
-COPY ./scripts /root/scripts
+COPY ./image-files/scripts /root/scripts
 
 ##############################################################################
 # Build Stage: build production image
@@ -83,8 +83,12 @@ ENV SCRIPT_PATH=${HOME}/scripts
 ENV GATEWAY_OR_TWS=gateway
 ARG DEBIAN_FRONTEND=noninteractive
 # Copy files
+
 COPY --from=setup /usr/local/ /usr/local/
 COPY --chown=${USER_ID}:${USER_GID} --from=setup /root/ ${HOME}
+# Ensure tws_settings and jts.ini are owned by ibgateway
+RUN mkdir -p /home/ibgateway/tws_settings && \
+  chown -R ${USER_ID}:${USER_GID} /home/ibgateway/tws_settings
 
 # Prepare system
 RUN apt-get update -y && \

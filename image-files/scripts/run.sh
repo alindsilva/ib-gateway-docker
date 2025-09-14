@@ -1,8 +1,45 @@
 #!/bin/bash
+# Added a comment to force Docker cache invalidation
 # shellcheck disable=SC2317
 # Don't warn about unreachable commands in this file
 
 set -Eeo pipefail
+
+echo "DEBUG: Script starting as user $(id -u) ($(id -un))"
+
+# If TWS_SETTINGS_PATH is set, ensure the user owns it
+if [ -n "${TWS_SETTINGS_PATH}" ]; then
+  echo "DEBUG: TWS_SETTINGS_PATH is set to ${TWS_SETTINGS_PATH}"
+  echo "DEBUG: Permissions BEFORE chown:"
+  ls -la "${TWS_SETTINGS_PATH}" || true # Use || true to prevent script from exiting if dir doesn't exist
+  chown -R ${USER_ID}:${USER_GID} "${TWS_SETTINGS_PATH}"
+  echo "DEBUG: Permissions AFTER chown:"
+  ls -la "${TWS_SETTINGS_PATH}" || true
+fi
+
+# If we are running as root, drop privileges and re-execute this script as the ibgateway user
+if [ "$(id -u)" = '0' ]; then
+	# Fix permissions for tws_settings and jts.ini before dropping privileges
+	if [ -d "/home/ibgateway/tws_settings" ]; then
+		echo "DEBUG: Fixing permissions for /home/ibgateway/tws_settings" >&2
+		chown -R ${USER_ID}:${USER_GID} /home/ibgateway/tws_settings
+		chmod -R u+rwX /home/ibgateway/tws_settings
+		if [ -f "/home/ibgateway/tws_settings/jts.ini" ]; then
+			echo "DEBUG: Fixing permissions for /home/ibgateway/tws_settings/jts.ini" >&2
+			chown ${USER_ID}:${USER_GID} /home/ibgateway/tws_settings/jts.ini
+			chmod u+rw /home/ibgateway/tws_settings/jts.ini
+		fi
+	fi
+	echo "DEBUG: Running as root, dropping privileges to ibgateway (${USER_ID}:${USER_GID})" >&2
+	sync
+	exec gosu ibgateway "$0" "$@"
+fi
+
+echo "DEBUG: Script continuing as user $(id -u) ($(id -un))"
+
+echo "DEBUG: Current permissions for /home/ibgateway/tws_settings and jts.ini after privilege drop:" >&2
+ls -la /home/ibgateway/tws_settings 2>/dev/null || true
+ls -la /home/ibgateway/tws_settings/jts.ini 2>/dev/null || true
 
 echo "*************************************************************************"
 echo ".> Starting IBC/IB gateway"
