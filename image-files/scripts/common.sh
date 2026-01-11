@@ -70,6 +70,22 @@ unset_env() {
 	fi
 }
 
+run_scripts() {
+	# run start up scripts
+	_start_scripts=$1
+	if [ ! -d "$_start_scripts" ]; then
+		echo "> No start scripts defined on $_start_scripts"
+		return 0
+	fi
+	echo "> Running start up scripts on $_start_scripts"
+
+	for _f in "${_start_scripts}"/*.sh; do
+		echo "> Running $_f"
+		[ -f "$_f" ] && bash "$_f" || echo "File $_f not found."
+	done
+
+}
+
 set_ports() {
 	# set ports for API and SOCAT
 
@@ -246,4 +262,24 @@ start_socat() {
 		"${SCRIPT_PATH}/run_socat.sh" &
 	fi
 
+}
+
+wait_x_socket() {
+	DISPLAY_NUM=${DISPLAY#:}
+	# wait for X11 socket
+	if [ -S "/tmp/.X11-unix/X${DISPLAY_NUM}" ]; then
+		return 0
+	fi
+	echo ".> Waiting for Xvfb socket on $DISPLAY..."
+	timeout=50 # 50 * .2 = 10 seconds max wait
+	elapsed=0
+	while [ ! -S "/tmp/.X11-unix/X${DISPLAY_NUM}" ]; do
+		sleep 0.2
+		elapsed=$((elapsed + 1))
+		if [ $elapsed -ge $timeout ]; then
+			echo "Error: Timed out waiting for Xvfb socket!"
+			exit 1
+		fi
+	done
+	echo ".> Xvfb socket ready!"
 }

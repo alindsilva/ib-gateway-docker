@@ -15,6 +15,7 @@ services:
       TWS_PASSWORD_PAPER: ${TWS_PASSWORD_PAPER:-}
       TWS_SETTINGS_PATH: ${TWS_SETTINGS_PATH:-}
       TWS_ACCEPT_INCOMING: ${TWS_ACCEPT_INCOMING:-manual}
+      TWS_MASTER_CLIENT_ID: ${TWS_MASTER_CLIENT_ID:-}
       READ_ONLY_API: ${READ_ONLY_API:-}
       TWOFA_TIMEOUT_ACTION: ${TWOFA_TIMEOUT_ACTION:-exit}
       BYPASS_WARNING: ${BYPASS_WARNING:-}
@@ -40,6 +41,9 @@ services:
       SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
+      START_SCRIPTS: ${START_SCRIPTS:-}
+      X_SCRIPTS: ${X_SCRIPTS:-}
+      IBC_SCRIPTS: ${IBC_SCRIPTS:-}
     volumes:
       - ib_gateway_settings:/home/ibgateway/tws_settings
     ports:

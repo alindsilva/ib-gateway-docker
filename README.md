@@ -1,6 +1,8 @@
 # Interactive Brokers Gateway Docker
 
-<img src="https://github.com/gnzsnz/ib-gateway-docker/blob/master/logo.png" height="300" alt="IB Gateway Docker"/>
+[![Build](https://github.com/gnzsnz/ib-gateway-docker/actions/workflows/on-push-n-pr.yml/badge.svg?branch=master)](https://github.com/gnzsnz/ib-gateway-docker/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GitHub Discussions](https://img.shields.io/github/discussions/gnzsnz/ib-gateway-docker)](https://github.com/gnzsnz/ib-gateway-docker/discussions) [![GitHub Repo stars](https://img.shields.io/github/stars/gnzsnz/ib-gateway-docker)](#repo-stats) [![GitHub forks](https://img.shields.io/github/forks/gnzsnz/ib-gateway-docker)](https://github.com/gnzsnz/ib-gateway-docker/network/members)
+
+<img src="https://github.com/gnzsnz/ib-gateway-docker/blob/master/logo.png" height="300" class="center" alt="IB Gateway Docker"/>
 
 ## What is it?
 
@@ -27,6 +29,7 @@ It includes:
 - Support parallel execution of `live` and `paper` trading mode.
 - [Secrets](#credentials) support (latest `10.29.1e`, stable `10.19.2m` or greater)
 - Experimental [aarch64](#aarch64-support) support, ex raspberry pi, M1,M2,M3,.., since `10.37.1l`/`10.39.1e`
+- Execution of custom scripts during [star-up process](#start-up-scripts).
 - Works well together with [Jupyter Quant](https://github.com/quantbelt/jupyter-quant)
   docker image.
 
@@ -36,10 +39,10 @@ Images are provided for [IB gateway][1] and [TWS][2]. With the following tags:
 
 | Image| Channel  | IB Gateway Version  | IBC Version      | Docker Tags                                    |
 | --- | -------- | ------------------- | ---------------- | ---------------------------------------------- |
-| [ib-gateway][1] | `latest` | `10.40.1b` | `3.23.0` | `latest` `10.40` `10.40.1b` |
-| [ib-gateway][1] |`stable` | `10.37.1l` | `3.23.0` | `stable` `10.37` `10.37.1l` |
-| [tws-rdesktop][2] | `latest` | `10.40.1b` | `3.23.0` | `latest` `10.40` `10.40.1b` |
-| [tws-rdesktop][2] |`stable` | `10.37.1l` | `3.23.0` | `stable` `10.37` `10.37.1l` |
+| [ib-gateway][1] | `latest` | `10.42.1a` | `3.23.0` | `latest` `10.42` `10.42.1a` |
+| [ib-gateway][1] |`stable` | `10.37.1o` | `3.23.0` | `stable` `10.37` `10.37.1o` |
+| [tws-rdesktop][2] | `latest` | `10.42.1a` | `3.23.0` | `latest` `10.42` `10.42.1a` |
+| [tws-rdesktop][2] |`stable` | `10.37.1o` | `3.23.0` | `stable` `10.37` `10.37.1o` |
 
 All tags are available in the container repository for [ib-gateway][1] and
 [tws-rdesktop][2]. IB Gateway and TWS share the same version numbers and tags.
@@ -47,7 +50,7 @@ All tags are available in the container repository for [ib-gateway][1] and
 ## How to use it?
 
 Create a `docker-compose.yml` file (or include ib-gateway services on your existing
-one). The sample files provided can be used as starting point, 
+one). The sample files provided can be used as starting point,
 [ib-gateway-compose](https://github.com/gnzsnz/ib-gateway-docker/blob/master/docker-compose.yml) and
 [tws-rdesktop-compose](https://github.com/gnzsnz/ib-gateway-docker/blob/master/tws-docker-compose.yml).
 
@@ -68,6 +71,7 @@ services:
       TRADING_MODE: ${TRADING_MODE:-paper}
       TWS_SETTINGS_PATH: ${TWS_SETTINGS_PATH:-}
       TWS_ACCEPT_INCOMING: ${TWS_ACCEPT_INCOMING:-}
+      TWS_MASTER_CLIENT_ID: ${TWS_MASTER_CLIENT_ID:-}
       READ_ONLY_API: ${READ_ONLY_API:-}
       VNC_SERVER_PASSWORD: ${VNC_SERVER_PASSWORD:-}
       TWOFA_TIMEOUT_ACTION: ${TWOFA_TIMEOUT_ACTION:-exit}
@@ -94,11 +98,15 @@ services:
       SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_VNC_PORT: ${SSH_VNC_PORT:-}
+      START_SCRIPTS: ${START_SCRIPTS:-}
+      X_SCRIPTS: ${X_SCRIPTS:-}
+      IBC_SCRIPTS: ${IBC_SCRIPTS:-}
 #    volumes:
 #      - ${PWD}/jts.ini:/home/ibgateway/Jts/jts.ini
 #      - ${PWD}/config.ini:/home/ibgateway/ibc/config.ini
 #      - ${PWD}/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
 #      - ${PWD}/ssh/:/home/ibgateway/.ssh
+#      - ${PWD}/init-scripts:/home/ibgateway/init-scripts
     ports:
       - "127.0.0.1:4001:4003"
       - "127.0.0.1:4002:4004"
@@ -106,7 +114,7 @@ services:
 
 ```
 
-Create an .env on root directory. Example .env file:
+Create an .env on root directory. You can use the provided [.env-dist](https://github.com/gnzsnz/ib-gateway-docker/blob/master/.env-dist) as a starting point. Example .env file:
 
 ```bash
 TWS_USERID=myTwsAccountName
@@ -146,6 +154,10 @@ SSH_REMOTE_PORT=
 SSH_USER_TUNNEL=
 SSH_RESTART=
 SSH_VNC_PORT=
+#START_SCRIPTS=init-scripts/start_scripts
+#X_SCRIPTS=init-scripts/x_scripts
+#IBC_SCRIPTS=init-scripts/ibc_scripts
+
 ```
 
 Once `docker-compose.yml` and `.env` are in place you can start the container with:
@@ -154,9 +166,11 @@ Once `docker-compose.yml` and `.env` are in place you can start the container wi
 docker compose up
 ```
 
-To get a GUI can use vnc for ib-gateway or RDP for TWS.
+To get a GUI you can use vnc for ib-gateway or RDP for TWS.
 
-Looking for help? Please keep reading below, or go to [discussion](https://github.com/gnzsnz/ib-gateway-docker/discussions) section for common problems and solutions.
+Looking for help? Please keep reading below, or go to
+[discussion](https://github.com/gnzsnz/ib-gateway-docker/discussions) section for common
+problems and solutions. If you have problems please go through the [troubleshooting guide](https://github.com/gnzsnz/ib-gateway-docker/discussions/245)
 
 ## Configuration
 
@@ -176,6 +190,7 @@ All environment variables are common between ibgateway and TWS image, unless spe
 | `VNC_SERVER_PASSWORD_FILE`  | VNC server password. If not defined, then VNC server will NOT start. Specific to ibgateway, ignored by TWS. | **not defined** (VNC disabled) |
 | `TWOFA_TIMEOUT_ACTION`      | 'exit' or 'restart', set to 'restart if you set `AUTO_RESTART_TIME`. See IBC [documentation](https://github.com/IbcAlpha/IBC/blob/master/userguide.md#second-factor-authentication)  | exit  |
 | `TWOFA_DEVICE` | second factor authentication device. See IBC [documentation](https://github.com/IbcAlpha/IBC/blob/c98d0bcc2ead9b8ab3900a23a707f01f8fd7dfbc/resources/config.ini#L104) | **not defined** |
+| `TWOFA_EXIT_INTERVAL` | It controls how long (in seconds) IBC waits for login to complete after the user acknowledges the second factor authentication. See [IBC documentation](https://github.com/IbcAlpha/IBC/blob/38593af5193ccd634aa226cc66242adc8718b653/resources/config.ini#L147) | 60 seconds |
 | `BYPASS_WARNING` | Settings relate to the corresponding 'Precautions' checkboxes in the API section of the Global Configuration dialog. Accepted values `yes`, `no` if not set, the existing TWS/Gateway configuration is unchanged  | **not defined**                                      |
 | `AUTO_RESTART_TIME`  | time to restart IB Gateway, does not require daily 2FA validation. format hh:mm AM/PM. See IBC [documentation](https://github.com/IbcAlpha/IBC/blob/master/userguide.md#ibc-user-guide) | **not defined**  |
 | `AUTO_LOGOFF_TIME` | Auto-Logoff: at a specified time, TWS shuts down tidily, without restarting   | **not defined**   |
@@ -187,6 +202,7 @@ All environment variables are common between ibgateway and TWS image, unless spe
 | `TIME_ZONE`  | Support for timezone, see your TWS jts.ini file for [valid values](https://ibkrguides.com/tws/usersguidebook/configuretws/configgeneral.htm) on a [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). This sets time zone for IB Gateway. If jts.ini exists it will not be set. if `TWS_SETTINGS_PATH` is set and stored in a volume, jts.ini will already exists so this will not be used. Examples `Europe/Paris`, `America/New_York`, `Asia/Tokyo` | "Etc/UTC"  |
 | `TWS_SETTINGS_PATH` | Settings path used by IBC's parameter `--tws_settings_path`. Use with a volume to preserve settings in the volume. If `TRADING_MODE=both` this will be the prefix four your settings. ex `/config/tws_settings_live` and `/config/tws_settings_paper`. |  |
 | `TWS_ACCEPT_INCOMING` | See IBC documentation, possible values `accept`, `reject`, `manual` | `manual` |
+| `TWS_MASTER_CLIENT_ID` | See IBC [documentation](https://github.com/IbcAlpha/IBC/blob/b866a263afec948c70352ce077e1560f3ad2b152/resources/config.ini#L349) | **not defined** |
 | `CUSTOM_CONFIG` | If set to `yes`, then `run.sh` will not generate config files using env variables. You should mount config files. Use with care and only if you know what you are doing. | NO |
 | `JAVA_HEAP_SIZE` | Set Java heap, default 768MB, TWS might need more. Proposed value 1024. Enter just the number, don't enter units, ex mb. See [Increase Memory Size for TWS](https://ibkrguides.com/tws/usersguidebook/priceriskanalytics/custommemory.htm) | **not defined**  |
 | `SSH_TUNNEL` | If set to `yes` then `socat` won't start, instead a remote ssh tunnel is started. if set to `both` then `socat` AND remote ssh tunnel are started. SSH keys should be provided to container through ~/.ssh volume.  | **not defined**                                      |
@@ -204,6 +220,9 @@ All environment variables are common between ibgateway and TWS image, unless spe
 | `PGID` | User `gid` for user `abc` (linuxserver default user name). Specific to TWS, ignored by ibgateway.  | 1000   |
 | `PASSWD` | Password for user `abc` (linuxserver default user name). Specific to TWS, ignored by ibgateway. | abc  |
 | `PASSWD_FILE` | File containing password for user `abc` (linuxserver default user name). Specific to TWS, ignored by ibgateway. See [credentials section](#credentials). | abc  |
+| `START_SCRIPTS` | Directory with bash scripts to run **before** X environment is up. See [start-up scripts](#start-up-scripts) | **not defined** |
+| `X_SCRIPTS` | Directory with bash scripts to run **after** X environment is running. See [start-up scripts](#start-up-scripts) | **not defined** |
+| `IBC_SCRIPTS` | Directory with bash scripts to run **after** IBC is running. See [start-up scripts](#start-up-scripts) | **not defined** |
 
 ## Ports
 
@@ -306,6 +325,44 @@ of data written to disk.
 saved. `TIME_ZONE` will only be applied to `jts.ini` if the file does not
 exists (first run) but not once the file exists. This is to avoid overwriting
 your settings.
+
+## Start-up scripts
+
+You can run scripts during start up to automate tasks or install additional
+tools. This can be done by setting environment variables `START_SCRIPTS`,
+`X_SCRIPTS` and `IBC_SCRIPTS` with a path containing start-up scripts.
+Scripts files should have `.sh` extension. Files will be executed in
+order, so `00-script.sh` will be executed before that `99-other-script.sh`.
+Start-up directory should be available in the container through a volume.
+
+For example for `ibgateway`:
+
+```bash
+# .env file
+START_SCRIPTS=init-scripts/start_scripts
+X_SCRIPTS=init-scripts/x_scripts
+IBC_SCRIPTS=init-scripts/ibc_scripts
+```
+
+and a volume in `docker-compose.yml`
+
+```yaml
+  volume:
+    - ${PWD}/init-scripts:/home/ibgateway/init-scripts
+```
+
+For TWS you can set your `.env` file as in the example and create a directory
+with your scripts in `/config/init-scripts/`. In TWS `$HOME=/config/`, while
+ib-gateway uses `$HOME=/home/ibgateway`.
+
+The start up process will search for start-up scripts in `$HOME/START_SCRIPTS`,
+`$HOME/X_SCRIPTS` and `$HOME/IBC_SCRIPTS`.
+
+Scripts in directory `$HOME/START_SCRIPTS` will run before the X environment is
+up. Scripts in `$HOME/X_SCRIPTS` will run once X environment is up, and
+`$HOME/IBC_SCRIPTS` once IBC runs. Take into account that scripts will run as
+soon as possible, so you might need to wait for X environment to be fully up or
+IBC to complete ibgateway/TWS start-up process.
 
 ## Security Considerations
 
@@ -604,3 +661,9 @@ https://github.com/gnzsnz/ib-gateway-docker/raw/gh-pages/ibgateway-releases/ibga
 
 [1]: https://github.com/users/gnzsnz/packages/container/package/ib-gateway "ib-gateway"
 [2]: https://github.com/gnzsnz/ib-gateway-docker/pkgs/container/tws-rdesktop "tws-rdesktop"
+
+## Repo stats
+
+Repository stars overtime.
+
+[![Stargazers over time](https://starchart.cc/gnzsnz/ib-gateway-docker.svg?variant=adaptive)](https://starchart.cc/gnzsnz/ib-gateway-docker)

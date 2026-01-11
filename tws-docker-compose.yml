@@ -14,8 +14,8 @@ services:
         - "ghcr.io/gnzsnz/tws-rdesktop:latest"
     image: ghcr.io/gnzsnz/tws-rdesktop:latest
     environment:
-      PUID: 1000
-      PGID: 1000
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
       PASSWD: ${PASSWD:-}
       TWS_USERID: ${TWS_USERID}
       TWS_PASSWORD: ${TWS_PASSWORD}
@@ -24,6 +24,7 @@ services:
       TWS_PASSWORD_PAPER: ${TWS_PASSWORD_PAPER:-}
       TWS_SETTINGS_PATH: ${TWS_SETTINGS_PATH:-}
       TWS_ACCEPT_INCOMING: ${TWS_ACCEPT_INCOMING:-manual}
+      TWS_MASTER_CLIENT_ID: ${TWS_MASTER_CLIENT_ID:-}
       READ_ONLY_API: ${READ_ONLY_API:-}
       TWOFA_TIMEOUT_ACTION: ${TWOFA_TIMEOUT_ACTION:-exit}
       BYPASS_WARNING: ${BYPASS_WARNING:-}
@@ -49,6 +50,9 @@ services:
       SSH_USER_TUNNEL: ${SSH_USER_TUNNEL:-}
       SSH_RESTART: ${SSH_RESTART:-}
       SSH_RDP_PORT: ${SSH_RDP_PORT:-}
+      START_SCRIPTS: ${START_SCRIPTS:-}
+      X_SCRIPTS: ${X_SCRIPTS:-}
+      IBC_SCRIPTS: ${IBC_SCRIPTS:-}
     volumes:
       - ./config:/config # optional
       - tws_tmp:/tmp # recommended for performance
