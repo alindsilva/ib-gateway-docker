@@ -1,11 +1,13 @@
-name: algo-trader-local
+name: algo-trader
 services:
   ib-gateway:
     restart: always
     build:
       context: .
       dockerfile: latest/Dockerfile
-    image: ib-gateway:local
+      tags:
+        - "${ECR_REPOSITORY_URL}:latest"
+    image: ${ECR_REPOSITORY_URL}:latest
     environment:
       TWS_USERID: ${TWS_USERID}
       TWS_PASSWORD_FILE: ${TWS_PASSWORD_FILE}
