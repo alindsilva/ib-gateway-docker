@@ -1,4 +1,4 @@
-name: algo-trader-local
+name: algo-trader
 services:
   ib-gateway:
     restart: always
@@ -46,6 +46,11 @@ services:
       IBC_SCRIPTS: ${IBC_SCRIPTS:-}
     volumes:
       - ib_gateway_settings:/home/ibgateway/tws_settings
+    #      - ${PWD}/jts.ini:/home/ibgateway/Jts/jts.ini
+    #      - ${PWD}/config.ini:/home/ibgateway/ibc/config.ini
+    #      - ${PWD}/tws_settings/:${TWS_SETTINGS_PATH:-/home/ibgateway/Jts}
+    #      - ${PWD}/ssh/:/home/ibgateway/.ssh
+    #      - ${PWD}/scripts:/home/ibgateway/init-scripts
     ports:
       - "127.0.0.1:4001:4003"
       - "127.0.0.1:4002:4004"
